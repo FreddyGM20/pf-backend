@@ -6,15 +6,17 @@ require("dotenv").config()
 const multer = require('multer')
 const bcrypt = require('bcryptjs')
 const upload = multer({ dest: 'uploads/' })
-const { TokenAssign, TokenVerify, AuthCheck, TokenRemove } = require('./src/middleware/autentication')
-const { getTemplate, sendEmail } = require('./src/middleware/email')
-const userSchema = require('./src/models/user')
-const historialSchema = require('./src/models/historial')
-const medicoSchema = require('./src/models/medico')
+const { TokenAssign, TokenVerify, AuthCheck, TokenRemove } = require('./middleware/autentication')
+const { getTemplate, sendEmail } = require('./middleware/email')
+const userSchema = require('./models/user')
+const historialSchema = require('./models/historial')
+const medicoSchema = require('./models/medico')
 const cors = require('cors')
 
+const PORT = process.env.PORT || 3000;
+
 // Datos del árbol de preguntas y respuestas
-const arbol = require('./src/questions/question.json');
+const arbol = require('./questions/question.json');
 
 app.use(bodyParser.json());
 app.use(cors({
@@ -237,6 +239,6 @@ mongoose
   .catch((error) => console.error(error))
 
 // Iniciar el servidor
-app.listen(3000, () => {
-  console.log('Servidor iniciado en el puerto 3000');
+app.listen(PORT, () => {
+  console.log(`Servidor iniciado en el puerto ${PORT}`);
 });

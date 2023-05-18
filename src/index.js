@@ -13,6 +13,8 @@ const historialSchema = require('./models/historial')
 const medicoSchema = require('./models/medico')
 const cors = require('cors')
 
+const PORT = process.env.PORT || 3000;
+
 // Datos del árbol de preguntas y respuestas
 const arbol = require('./questions/question.json');
 
@@ -26,9 +28,8 @@ app.use(cors({
 app.get('/', (req, res) => {
   res.send("Welcome to my API bet")
 })
-
 // Endpoint para obtener una pregunta
-app.post('/registro', upload.none(), async (req, res) => {
+app.post('/api/registro', upload.none(), async (req, res) => {
   if(req.body.nombre == "") return res.status(200).json({ Status: "Error", message: "Falta el campo 'Nombre' por completar"})
   if(req.body.email == "") return res.status(200).json({ Status: "Error", message: "Falta el campo 'Email' por completar"})
   const user = new userSchema({
@@ -64,7 +65,7 @@ app.post('/registro', upload.none(), async (req, res) => {
 })
 
 //Preguntas chatbot
-app.get('/preguntas/:id', upload.none(), async (req, res) => {
+app.get('/api/preguntas/:id', upload.none(), async (req, res) => {
   const idPregunta = parseInt(req.params.id);
 
   const pregunta = arbol.find((pregunta) => pregunta.id === idPregunta);
@@ -77,7 +78,7 @@ app.get('/preguntas/:id', upload.none(), async (req, res) => {
 });
 
 // Endpoint para enviar una respuesta
-app.put('/respuestas', upload.none(), async (req, res) => {
+app.put('/api/respuestas', upload.none(), async (req, res) => {
   const idPregunta = parseInt(req.body.id_pregunta);
   const respuesta = req.body.respuesta;
   const pregunta = arbol.find((pregunta) => pregunta.id === idPregunta);
@@ -124,7 +125,7 @@ app.put('/respuestas', upload.none(), async (req, res) => {
 });
 
 // Endpoint para eliminar la respuesta y volver a la pregunta anterior
-app.put('/respuestas/:id_pregunta', upload.none(), async (req, res) => {
+app.put('/api/respuestas/:id_pregunta', upload.none(), async (req, res) => {
   const idPregunta = parseInt(req.params.id_pregunta);
   const prueba = await historialSchema.updateOne({ iduser: req.body.iduser }, { $pull: { historial: { id: idPregunta } } })
   const pregunta = arbol.find((pregunta) => pregunta.id === idPregunta);
@@ -145,7 +146,7 @@ app.put('/respuestas/:id_pregunta', upload.none(), async (req, res) => {
 });
 
 //Endpoint registro medico
-app.post('/medico/registro', upload.none(), async (req, res) => {
+app.post('/api/medico/registro', upload.none(), async (req, res) => {
   const ver = await medicoSchema.findOne({ email: req.body.email })
   if (ver == undefined || ver == null) {
     const salt = await bcrypt.genSalt(10)
@@ -165,7 +166,7 @@ app.post('/medico/registro', upload.none(), async (req, res) => {
   }
 })
 
-app.post('/medico/login', upload.none(), async (req, res) => {
+app.post('/api/medico/login', upload.none(), async (req, res) => {
   const password = req.body.password
   const userExist = await medicoSchema.findOne({ email: req.body.email })
   if (userExist) {
@@ -180,7 +181,7 @@ app.post('/medico/login', upload.none(), async (req, res) => {
   }
 })
 
-app.put('/medico/diagnostico', upload.none(), async (req, res) => {
+app.put('/api/medico/diagnostico', upload.none(), async (req, res) => {
   const token = req.headers.authorization.split(' ').pop()
   const tokenver = await TokenVerify(token)
   if (tokenver) {
@@ -214,19 +215,19 @@ app.put('/medico/diagnostico', upload.none(), async (req, res) => {
   }
 })
 
-app.post('/medico/revisado', upload.none(), async (req, res) => {
+app.post('/api/medico/revisado', upload.none(), async (req, res) => {
   const token = req.headers.authorization.split(' ').pop()
   const tokenver = await TokenVerify(token)
   const result = await historialSchema.find({$and : [{revision:true}, {idmedico:tokenver._id}]  })
   return res.status(200).send({response: "Success", datos: result})
 })
 
-app.get('/medico/norevisado', upload.none(), async (req, res) => {
+app.get('/api/medico/norevisado', upload.none(), async (req, res) => {
   const result = await historialSchema.find({revision:false})
   return res.status(200).send({response: "Success", datos: result})
 })
 
-app.post('/medico/seep', upload.none(), async (req, res) => {
+app.post('/api/medico/seep', upload.none(), async (req, res) => {
   const result = await historialSchema.findById(req.body.id)
   return res.status(200).send({response: "Success", datos: result})
 })
@@ -238,6 +239,6 @@ mongoose
   .catch((error) => console.error(error))
 
 // Iniciar el servidor
-app.listen(3000, () => {
-  console.log('Servidor iniciado en el puerto 3000');
+app.listen(PORT, () => {
+  console.log(`Servidor iniciado en el puerto ${PORT}`);
 });
